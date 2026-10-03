@@ -1,0 +1,1065 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>스왑핏 · 아파도 운동은 바꿔서 한다</title>
+<meta name="description" content="운동 부위와 아픈 곳을 고르면 지금 헬스장에서 바로 바꿔 할 대체 운동을 알려주는 스왑핏.">
+<meta name="theme-color" content="#F2F5F8" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#0E1216" media="(prefers-color-scheme: dark)">
+<link rel="manifest" href="/manifest.json">
+<link rel="icon" href="/icons/favicon.svg" type="image/svg+xml">
+<link rel="icon" href="/icons/favicon-32.png" sizes="32x32" type="image/png">
+<link rel="apple-touch-icon" href="/icons/apple-touch-icon.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="스왑핏">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta property="og:title" content="스왑핏">
+<meta property="og:description" content="아파도 운동은 바꿔서 한다. 통증 부위별 대체 운동 찾기.">
+<meta property="og:image" content="/icons/og.png">
+<style>html,body{margin:0}[hidden]{display:none!important}img{max-width:100%}.app{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}</style>
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Black+Han+Sans&family=IBM+Plex+Sans+KR:wght@400;500;700&family=IBM+Plex+Mono:wght@500&display=swap">
+<style>
+/* Layout: 앱처럼 한 화면씩 — 1 부위 → 2 통증 → 3 결과(탭). 화면 높이 고정, 넘칠 때만 화면 안에서 스크롤. */
+:root{
+  --bg:#F2F5F8; --surface:#FFFFFF; --ink:#14202B; --muted:#5A6A79; --line:#D8E0E7;
+  --tape:#1A78C2; --tape-soft:#E3F0FA; --tape-ink:#FFFFFF;
+  --pain:#D63A72; --pain-soft:#FBE6EE;
+  --ok:#1E8A55; --ok-soft:#E2F4EA; --warn:#B7790F; --warn-soft:#FBF0DA; --stop:#C7342F; --stop-soft:#FBE4E2;
+  --f-display:"Black Han Sans","IBM Plex Sans KR","Apple SD Gothic Neo","Malgun Gothic",sans-serif;
+  --f-body:"IBM Plex Sans KR","Apple SD Gothic Neo","Malgun Gothic",system-ui,sans-serif;
+  --f-mono:"IBM Plex Mono",ui-monospace,Menlo,monospace;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#0E1216; --surface:#171D23; --ink:#E7ECF1; --muted:#93A0AD; --line:#27313B;
+  --tape:#4FB8F0; --tape-soft:#14303F; --tape-ink:#0B1621;
+  --pain:#FF5C93; --pain-soft:#3A1A27;
+  --ok:#4CC488; --ok-soft:#14301F; --warn:#E5AE45; --warn-soft:#352A12; --stop:#F0706A; --stop-soft:#3A1816;
+  color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#0E1216; --surface:#171D23; --ink:#E7ECF1; --muted:#93A0AD; --line:#27313B;
+  --tape:#4FB8F0; --tape-soft:#14303F; --tape-ink:#0B1621;
+  --pain:#FF5C93; --pain-soft:#3A1A27;
+  --ok:#4CC488; --ok-soft:#14301F; --warn:#E5AE45; --warn-soft:#352A12; --stop:#F0706A; --stop-soft:#3A1816;
+  color-scheme:dark}
+*{box-sizing:border-box}
+html,body{height:100%}
+body{background:var(--bg);color:var(--ink);font-family:var(--f-body);font-size:15px;line-height:1.55;overflow:hidden}
+button{font:inherit;color:inherit}
+button:focus-visible,input:focus-visible,a:focus-visible{outline:2.5px solid var(--tape);outline-offset:2px}
+.app{height:100%;max-width:480px;margin:0 auto;display:flex;flex-direction:column;padding-inline:16px}
+.bar{flex:none;display:grid;grid-template-columns:40px 1fr 40px;align-items:center;height:52px}
+.back{appearance:none;border:0;background:transparent;width:40px;height:40px;border-radius:12px;font-size:26px;line-height:1;cursor:pointer;color:var(--ink)}
+.back:disabled{visibility:hidden}
+.steps{display:flex;justify-content:center;gap:6px}
+.steps i{width:22px;height:5px;border-radius:3px;background:var(--line);transition:background .2s}
+.steps i.on{background:var(--tape)}
+.screens{flex:1;position:relative;overflow:hidden;min-height:0}
+.scr{position:absolute;inset:0;overflow-y:auto;overscroll-behavior:contain;display:flex;flex-direction:column;gap:16px;padding-block:6px 20px;transition:transform .3s cubic-bezier(.2,.8,.2,1),opacity .3s;transform:translateX(105%);opacity:0;visibility:hidden}
+.scr.on{transform:none;opacity:1;visibility:visible}
+.scr.past{transform:translateX(-25%);opacity:0;visibility:hidden}
+@media (prefers-reduced-motion:reduce){.scr{transition:none}}
+h1,h2{margin:0;text-wrap:balance}
+h2{font-size:24px;line-height:1.3}
+.kicker{font-size:13px;font-weight:700;color:var(--tape);letter-spacing:.04em}
+/* 1 */
+.hero{display:flex;align-items:center;gap:10px}
+.hero h1{font-family:var(--f-display);font-weight:400;font-size:30px;line-height:1}
+.hero p{margin:2px 0 0;color:var(--muted);font-size:13px}
+.tiles{display:grid;grid-template-columns:1fr 1fr;gap:10px;flex:1;grid-auto-rows:minmax(84px,1fr);max-height:420px}
+.tile{appearance:none;border:1.5px solid var(--line);background:var(--surface);border-radius:18px;padding:14px;cursor:pointer;display:flex;flex-direction:column;justify-content:space-between;align-items:flex-start;text-align:left;transition:border-color .15s,transform .1s}
+.tile:active{transform:scale(.97)}
+.tile:hover{border-color:var(--tape)}
+.tile b{font-size:22px;line-height:1.1}
+.tile span{font-size:12.5px;color:var(--muted)}
+.tile em{font-style:normal;font-size:11.5px;font-weight:700;color:var(--tape);background:var(--tape-soft);border-radius:999px;padding:2px 8px}
+.note{font-size:11.5px;color:var(--muted);margin:0}
+/* 2 */
+.rows{display:flex;flex-direction:column;gap:10px}
+.row{appearance:none;border:1.5px solid var(--line);background:var(--surface);border-radius:16px;padding:16px;cursor:pointer;display:grid;grid-template-columns:auto 1fr auto;gap:2px 12px;align-items:center;text-align:left}
+.row:hover{border-color:var(--pain)}
+.row:active{transform:scale(.98)}
+.row i{grid-row:span 2;width:12px;height:12px;border-radius:50%;background:var(--pain);box-shadow:0 0 0 5px var(--pain-soft)}
+.row b{font-size:17px}
+.row span{grid-column:2;font-size:13px;color:var(--muted)}
+.row .chev{grid-row:1/span 2;grid-column:3;font-size:22px;color:var(--muted)}
+/* 3 */
+.r-title{display:flex;flex-direction:column;gap:2px}
+.r-title h2{font-size:21px}
+.pain{background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:12px 14px;display:flex;flex-direction:column;gap:8px}
+.pain-top{display:flex;justify-content:space-between;align-items:baseline}
+.pain-top label{font-weight:700;font-size:14px}
+.nrs{font-family:var(--f-mono);font-size:20px;font-variant-numeric:tabular-nums}
+.nrs small{font-size:12px;color:var(--muted)}
+input[type=range]{width:100%;accent-color:var(--tape);margin:0}
+.verdict{border-radius:10px;padding:8px 10px;font-size:13.5px;display:flex;gap:8px;align-items:center}
+.verdict .pill{flex:none;font-size:12px;font-weight:700;border-radius:999px;padding:2px 10px;color:var(--surface)}
+.v-ok{background:var(--ok-soft)} .v-ok .pill{background:var(--ok)}
+.v-warn{background:var(--warn-soft)} .v-warn .pill{background:var(--warn)}
+.v-stop{background:var(--stop-soft)} .v-stop .pill{background:var(--stop)}
+.tabs{display:grid;grid-template-columns:repeat(3,1fr);background:var(--line);border-radius:12px;padding:3px;gap:3px;position:sticky;top:0;z-index:2}
+.tab{appearance:none;border:0;background:transparent;border-radius:9px;padding:8px 4px;font-size:14px;font-weight:700;color:var(--muted);cursor:pointer}
+.tab[aria-selected="true"]{background:var(--surface);color:var(--ink);box-shadow:0 1px 3px rgba(0,0,0,.12)}
+.panel{display:flex;flex-direction:column;gap:14px}
+.lbl{font-size:13px;font-weight:700;color:var(--muted);margin:0 0 6px}
+.avoid{display:flex;flex-wrap:wrap;gap:6px}
+.avoid span{font-size:13px;border-radius:6px;padding:2px 8px;background:var(--stop-soft);text-decoration:line-through;text-decoration-color:var(--stop);text-decoration-thickness:1.5px}
+.froms{display:flex;gap:6px;overflow-x:auto;padding-bottom:2px;scrollbar-width:none}
+.froms::-webkit-scrollbar{display:none}
+.from{appearance:none;flex:none;border:1.5px solid var(--line);background:var(--surface);border-radius:999px;padding:7px 13px;font-size:14px;cursor:pointer;white-space:nowrap}
+.from[aria-pressed="true"]{background:var(--ink);border-color:var(--ink);color:var(--bg)}
+.alts{display:flex;flex-direction:column;gap:10px}
+.alts.dim{opacity:.4;pointer-events:none}
+.alt{background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:12px 14px;display:grid;grid-template-columns:1fr auto;gap:4px 12px;align-items:center}
+.alt strong{font-size:16px;line-height:1.35}
+.alt .best{font-size:11px;font-weight:700;background:var(--tape-soft);color:var(--tape);border-radius:4px;padding:1px 6px;margin-left:6px;vertical-align:2px}
+.alt p{grid-column:1/-1;margin:0;color:var(--muted);font-size:13.5px}
+.play{appearance:none;border:0;background:var(--tape);color:var(--tape-ink);border-radius:999px;padding:8px 14px;font-size:13px;font-weight:700;cursor:pointer;white-space:nowrap}
+.play::before{content:"▶ ";font-size:10px}
+.cause{background:var(--tape-soft);border-radius:14px;padding:12px 14px;font-size:14.5px}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:12px 14px}
+ul.plain{margin:0;padding-left:18px;display:flex;flex-direction:column;gap:4px;font-size:14.5px}
+.red{border:1.5px solid var(--stop);background:var(--stop-soft);border-radius:14px;padding:12px 14px}
+.red .lbl{color:var(--stop)}
+.maps{display:flex;gap:8px}
+.maps a{flex:1;text-align:center;text-decoration:none;font-weight:700;font-size:14.5px;border-radius:12px;padding:12px;background:var(--ink);color:var(--bg)}
+.maps a.alt2{background:var(--surface);color:var(--ink);border:1.5px solid var(--line)}
+.partner{border:1.5px dashed var(--line);border-radius:12px;padding:10px 12px;font-size:12.5px;color:var(--muted)}
+/* 동작 시트 */
+.sheet{position:fixed;inset:0;z-index:20;background:rgba(5,7,9,.72);display:flex;align-items:flex-end;justify-content:center;padding:16px;padding-bottom:calc(16px + env(safe-area-inset-bottom,0px))}
+.sheet[hidden]{display:none}
+@media (min-width:640px){.sheet{align-items:center}}
+.sheet-card{width:100%;max-width:480px;max-height:100%;overflow:auto;background:#121518;color:#E8EBEE;border:1px solid #23292F;border-radius:20px;display:flex;flex-direction:column;gap:12px;padding:14px}
+.sheet-top{display:flex;align-items:flex-start;justify-content:space-between;gap:12px}
+.sheet-top h3{margin:0;font-size:18px;text-wrap:balance}
+.sheet-top small{color:#8C949C;font-size:12.5px}
+.x{appearance:none;border:0;background:#1E2328;color:#E8EBEE;width:34px;height:34px;border-radius:50%;font-size:18px;cursor:pointer;flex:none}
+.stage{position:relative;border-radius:12px;overflow:hidden;background:#0B0C0E;cursor:pointer}
+.stage canvas{display:block;width:100%;height:auto;aspect-ratio:4/3}
+.stage .pp{position:absolute;right:10px;top:10px;font-size:12px;color:#8C949C;background:#16191D;border-radius:999px;padding:3px 10px}
+.legend{display:flex;flex-wrap:wrap;gap:14px;font-size:13px;color:#B9C0C7}
+.legend i{display:inline-block;width:10px;height:10px;border-radius:50%;margin-right:6px;vertical-align:-1px}
+.sheet-desc{margin:0;font-size:14.5px;color:#C9CFD5}
+.tempo{font-family:var(--f-mono);font-size:12.5px;color:#8C949C}
+.yt{color:#8FD9FF;font-size:13.5px}
+</style>
+
+</head>
+<body>
+<div class="app">
+ <header class="bar">
+  <button class="back" id="back" aria-label="뒤로" disabled>‹</button>
+  <div class="steps" aria-hidden="true"><i class="on"></i><i></i><i></i></div>
+  <span></span>
+ </header>
+ <main class="screens">
+  <section class="scr on" id="s1" aria-label="운동 부위 선택">
+   <div class="hero"><svg xmlns="http://www.w3.org/2000/svg" width="44" height="44" aria-hidden="true" viewBox="0 0 512 512"><g transform="translate(0 0) scale(1.0)"><rect width="512" height="512" rx="116" fill="#0B0C0E"/><path d="M111.8 214.7 A150 150 0 0 1 367.5 155.6" fill="none" stroke="#FF4F8B" stroke-width="40" stroke-linecap="round"/><path d="M400.5 194.8 L404.6 131.3 L337.2 187.9 Z" fill="#FF4F8B" stroke="#FF4F8B" stroke-width="10" stroke-linejoin="round"/><path d="M400.2 297.3 A150 150 0 0 1 144.5 356.4" fill="none" stroke="#3FC8FF" stroke-width="40" stroke-linecap="round"/><path d="M111.5 317.2 L107.4 380.7 L174.8 324.1 Z" fill="#3FC8FF" stroke="#3FC8FF" stroke-width="10" stroke-linejoin="round"/><rect x="176" y="248" width="160" height="16" rx="8" fill="#F1F3F5"/><rect x="186" y="208.0" width="28" height="96" rx="9" fill="#F1F3F5"/><rect x="298" y="208.0" width="28" height="96" rx="9" fill="#F1F3F5"/><rect x="160" y="224.0" width="20" height="64" rx="9" fill="#F1F3F5"/><rect x="332" y="224.0" width="20" height="64" rx="9" fill="#F1F3F5"/></g></svg><div><h1>스왑핏</h1><p>아파도 운동은 바꿔서 한다</p></div></div>
+   <div><div class="kicker">STEP 1</div><h2>오늘 어디 운동해요?</h2></div>
+   <div class="tiles" id="tiles"></div>
+   <p class="note">운동 선택을 돕는 참고 정보이고, 의학적 진단이나 치료를 대신하지 않아요.</p>
+  </section>
+  <section class="scr" id="s2" aria-label="통증 부위 선택">
+   <div><div class="kicker">STEP 2</div><h2 id="s2t"></h2></div>
+   <div class="rows" id="rows"></div>
+  </section>
+  <section class="scr" id="s3" aria-label="대체 운동"></section>
+ </main>
+</div>
+
+<div class="sheet" id="sheet" hidden role="dialog" aria-modal="true" aria-labelledby="sh-name">
+ <div class="sheet-card">
+  <div class="sheet-top"><div><small id="sh-from"></small><h3 id="sh-name"></h3></div><button class="x" id="sh-close" aria-label="닫기">×</button></div>
+  <div class="stage" id="stage"><canvas id="cv" width="640" height="480" aria-label="동작 애니메이션"></canvas><span class="pp" id="pp">탭해서 멈춤</span></div>
+  <div class="legend"><span><i style="background:#3FC8FF"></i><b id="sh-mus"></b> 자극</span><span id="sh-painl"><i style="background:#FF4F8B"></i><span id="sh-pain"></span> 통증 부위 (부담 적은 동작)</span></div>
+  <p class="sheet-desc" id="sh-desc"></p>
+  <div class="tempo">템포  1초 힘주기 · 0.4초 정지 · 1.4초 돌아오기</div>
+  <a class="yt" id="sh-yt" target="_blank" rel="noopener">실제 영상으로도 보기 (유튜브 검색)</a>
+ </div>
+</div>
+<script>
+/* ===== 쫄라맨 동작 엔진 ===== */
+const SEG={tor:62,ua:34,fa:32,th:46,sh:44};
+const COL={bg:"#0B0C0E",body:"#F1F3F5",far:"#7C838B",prop:"#3A4048",cable:"#59636D",hi:"#3FC8FF",pain:"#FF4F8B",txt:"#8C949C"};
+const rad=d=>d*Math.PI/180;
+const lerp=(a,b,t)=>a+(b-a)*t;
+function ik(root,tgt,l1,l2,bend){
+  let dx=tgt[0]-root[0],dy=tgt[1]-root[1],d=Math.hypot(dx,dy);
+  const base=Math.atan2(dy,dx);
+  d=Math.max(Math.abs(l1-l2)+0.5,Math.min(l1+l2-0.3,d));
+  const a=Math.acos(Math.max(-1,Math.min(1,(l1*l1+d*d-l2*l2)/(2*l1*d))));
+  const ang=base+bend*a;
+  const mid=[root[0]+l1*Math.cos(ang),root[1]+l1*Math.sin(ang)];
+  const end=[root[0]+d*Math.cos(base),root[1]+d*Math.sin(base)];
+  return [mid,end];
+}
+function lerpPose(A,B,t){
+  const o={};
+  for(const k of new Set([...Object.keys(A),...Object.keys(B)])){
+    const a=A[k],b=B[k]===undefined?a:B[k];
+    if(a===undefined){o[k]=b;continue}
+    if(typeof a==="number")o[k]=lerp(a,b,t);
+    else if(Array.isArray(a))o[k]=a.map((v,i)=>lerp(v,b[i],t));
+    else if(a&&typeof a==="object")o[k]=lerpPose(a,b,t);
+    else o[k]=t<.5?a:b;
+  }
+  return o;
+}
+function limb(root,anchor,spec,l1,l2){
+  if(!spec)return null;
+  let t=spec.t?spec.t:[anchor[0]+spec.r[0],anchor[1]+spec.r[1]];
+  if(spec.k)return [root,spec.k,t];
+  const [m,e]=ik(root,t,l1,l2,spec.b||1);
+  return [root,m,e];
+}
+function solve(T,p){
+  const face=T.face||1;
+  const hip=p.hip, a=rad(p.tor), dir=[Math.cos(a),Math.sin(a)];
+  const sh=[hip[0]+SEG.tor*dir[0],hip[1]+SEG.tor*dir[1]];
+  const head=[hip[0]+(SEG.tor+16)*dir[0],hip[1]+(SEG.tor+16)*dir[1]];
+  const front=face===1?[-dir[1],dir[0]]:[dir[1],-dir[0]];
+  const S={hip,sh,head,dir,front,face,view:T.view||"side"};
+  if(S.view==="front"){
+    const cx=hip[0];
+    S.shR=[sh[0]+22,sh[1]+2];S.shL=[sh[0]-22,sh[1]+2];
+    S.hipR=[hip[0]+9,hip[1]-2];S.hipL=[hip[0]-9,hip[1]-2];
+    const mir=s=>s&&({...s,t:s.t?[2*cx-s.t[0],s.t[1]]:undefined,r:s.r?[-s.r[0],s.r[1]]:undefined,k:s.k?[2*cx-s.k[0],s.k[1]]:undefined,b:-(s.b||1)});
+    S.armR=limb(S.shR,S.shR,p.arm,SEG.ua,SEG.fa);
+    S.armL=limb(S.shL,S.shL,mir(p.arm),SEG.ua,SEG.fa);
+    S.legR=limb(S.hipR,S.hipR,p.leg,SEG.th,SEG.sh);
+    S.legL=limb(S.hipL,S.hipL,mir(p.leg),SEG.th,SEG.sh);
+  }else{
+    S.arm=limb(sh,sh,p.arm,SEG.ua,SEG.fa);
+    S.arm2=limb(sh,sh,p.arm2,SEG.ua,SEG.fa);
+    S.leg=limb(hip,hip,p.leg,SEG.th,SEG.sh);
+    S.leg2=limb(hip,hip,p.leg2,SEG.th,SEG.sh);
+  }
+  S.p=p;
+  return S;
+}
+function line(c,a,b,w,col){c.strokeStyle=col;c.lineWidth=w;c.beginPath();c.moveTo(a[0],a[1]);c.lineTo(b[0],b[1]);c.stroke()}
+function poly(c,pts,w,col){c.strokeStyle=col;c.lineWidth=w;c.beginPath();c.moveTo(pts[0][0],pts[0][1]);for(const q of pts.slice(1))c.lineTo(q[0],q[1]);c.stroke()}
+function footOf(c,S,leg,col,p){
+  if(!leg)return;
+  const [h,k,an]=leg;let ang;
+  if(p.ft!==undefined)ang=rad(p.ft);
+  else{const dx=an[0]-k[0],dy=an[1]-k[1];const sd=Math.atan2(dy,dx);ang=sd-(S.face===1?Math.PI/2:-Math.PI/2)}
+  line(c,an,[an[0]+11*Math.cos(ang),an[1]+11*Math.sin(ang)],5,col);
+}
+function hand(c,T,pt,col){
+  if(!pt)return;
+  if(T.hand==="db"){c.fillStyle=COL.prop;c.strokeStyle="#5A626B";c.lineWidth=2;c.beginPath();c.arc(pt[0],pt[1],6.5,0,7);c.fill();c.stroke()}
+  else if(T.hand==="handle"){c.strokeStyle="#5A626B";c.lineWidth=3;c.beginPath();c.arc(pt[0],pt[1],5,0,7);c.stroke()}
+}
+function seg(S,name){
+  const {hip,sh,dir,front}=S;
+  const at=(f,off)=>[hip[0]+dir[0]*SEG.tor*f+front[0]*off,hip[1]+dir[1]*SEG.tor*f+front[1]*off];
+  return {at};
+}
+function painPoint(S,where){
+  const v=S.view==="front";
+  const arm=v?S.armR:S.arm, leg=v?S.legR:S.leg;
+  const {at}=seg(S);
+  switch(where){
+    case"shoulder":return v?S.shR:S.sh;
+    case"elbow":return arm&&arm[1];
+    case"hand":return arm&&arm[2];
+    case"neck":return at(1.12,0);
+    case"rib":return v?[S.sh[0]+10,S.sh[1]+22]:at(.68,0);
+    case"low":return v?[S.hip[0],S.hip[1]-10]:at(.18,-3);
+    case"knee":return leg&&leg[1];
+    case"ankle":return leg&&leg[2];
+    case"hip":return v?S.hipR:S.hip;
+    case"thigh":return leg&&[(leg[0][0]+leg[1][0])/2,(leg[0][1]+leg[1][1])/2];
+    case"tail":return v?[S.hip[0],S.hip[1]+4]:at(-.06,-5);
+  }
+}
+/* ---- 근육질 실루엣 ---- */
+function smoothClosed(c,pts){
+  const n=pts.length;c.beginPath();
+  const m=(a,b)=>[(a[0]+b[0])/2,(a[1]+b[1])/2];
+  let s=m(pts[n-1],pts[0]);c.moveTo(s[0],s[1]);
+  for(let i=0;i<n;i++){const p=pts[i],q=m(p,pts[(i+1)%n]);c.quadraticCurveTo(p[0],p[1],q[0],q[1])}
+  c.closePath();
+}
+function prof(w0,wp,pp,w1){return s=>s<pp?w0+(wp-w0)*Math.sin(s/pp*Math.PI/2):w1+(wp-w1)*Math.cos((s-pp)/(1-pp)*Math.PI/2)}
+function pw(ctrl){return s=>{if(s<=ctrl[0][0])return ctrl[0][1];for(let i=1;i<ctrl.length;i++){if(s<=ctrl[i][0]){const [a,wa]=ctrl[i-1],[b,wb]=ctrl[i];const t=(s-a)/(b-a);return wa+(wb-wa)*(1-Math.cos(t*Math.PI))/2}}return ctrl[ctrl.length-1][1]}}
+function segShape(a,b,fL,fR,s0=0,s1=1,N=12){
+  const dx=b[0]-a[0],dy=b[1]-a[1],L=Math.hypot(dx,dy)||1,u=[dx/L,dy/L],n=[-u[1],u[0]];
+  const left=[],right=[];
+  for(let i=0;i<=N;i++){const s=s0+(s1-s0)*i/N;const p=[a[0]+dx*s,a[1]+dy*s];
+    left.push([p[0]+n[0]*fL(s),p[1]+n[1]*fL(s)]);right.push([p[0]-n[0]*fR(s),p[1]-n[1]*fR(s)])}
+  return left.concat(right.reverse());
+}
+function fillShape(c,pts,col,glow){c.save();if(glow){c.shadowColor=COL.hi;c.shadowBlur=16}c.fillStyle=col;smoothClosed(c,pts);c.fill();c.restore()}
+function dot(c,p,r,col){c.fillStyle=col;c.beginPath();c.arc(p[0],p[1],r,0,7);c.fill()}
+const PF={
+ ua:prof(7.5,9.5,.4,4.6), fa:prof(6,7,.25,3.6), th:prof(11,12.5,.32,6.2), sh:prof(6.2,8,.26,3.6)
+};
+function armShapes(A){return{ua:segShape(A[0],A[1],PF.ua,PF.ua),fa:segShape(A[1],A[2],PF.fa,PF.fa)}}
+function legShapes(L){return{th:segShape(L[0],L[1],PF.th,PF.th),sh:segShape(L[1],L[2],PF.sh,PF.sh)}}
+function drawArm(c,T,A,col,hiUa){if(!A)return;const s=armShapes(A);fillShape(c,s.fa,col);fillShape(c,s.ua,col);dot(c,A[1],4.8,col);dot(c,A[2],4,col);if(hiUa)fillShape(c,s.ua,COL.hi,true);hand(c,T,A[2])}
+function drawLeg(c,S,L,col,hiTh,hiSh){if(!L)return;const s=legShapes(L);footOf(c,S,L,col,S.p);fillShape(c,s.sh,col);fillShape(c,s.th,col);dot(c,L[1],6.2,col);if(hiTh)fillShape(c,s.th,COL.hi,true);if(hiSh)fillShape(c,s.sh,COL.hi,true)}
+// 옆모습 몸통: 앞(가슴·복근) / 뒤(엉덩이·광배)
+const TF=pw([[-.06,7],[.1,9.5],[.45,9],[.7,12.5],[.86,13.5],[1,9]]);
+const TB=pw([[-.06,9],[.08,13.5],[.3,8.5],[.55,9.5],[.8,12.5],[1,8]]);
+function torsoSide(S,s0=-.06,s1=1,fF=TF,fB=TB){
+  const e=[S.hip[0]+S.dir[0]*SEG.tor,S.hip[1]+S.dir[1]*SEG.tor];
+  // segShape의 왼쪽 법선이 앞쪽이 되도록 방향 맞춤
+  const n=[-S.dir[1],S.dir[0]];const frontIsLeft=(n[0]*S.front[0]+n[1]*S.front[1])>0;
+  return frontIsLeft?segShape(S.hip,e,fF,fB,s0,s1,16):segShape(S.hip,e,fB,fF,s0,s1,16);
+}
+// 정면 몸통: V자
+const TW=pw([[-.04,14],[.15,12.5],[.45,13],[.72,21],[.88,24.5],[1,22]]);
+function torsoFront(S,s0=-.04,s1=1,f=TW){return segShape(S.hip,[S.hip[0]+S.dir[0]*SEG.tor,S.hip[1]+S.dir[1]*SEG.tor],f,f,s0,s1,16)}
+function at2(S,s,off){const n=[-S.dir[1],S.dir[0]];return[S.hip[0]+S.dir[0]*SEG.tor*s+n[0]*off,S.hip[1]+S.dir[1]*SEG.tor*s+n[1]*off]}
+function defLine(c,a,b){c.save();c.strokeStyle="#9AA3AC";c.lineWidth=1.3;c.lineCap="round";c.beginPath();c.moveTo(a[0],a[1]);c.lineTo(b[0],b[1]);c.stroke();c.restore()}
+
+function drawFigure(c,T,S,pain,time){
+  const B="#E7EAED",F="#5F666E",mus=new Set(T.mus||[]);
+  if(S.view==="front"){
+    const L=S.legL,R=S.legR;
+    drawLeg(c,S,L,B,mus.has("quad"));drawLeg(c,S,R,B,mus.has("quad"));
+    // 승모
+    const nk=[S.sh[0],S.sh[1]-9];
+    fillShape(c,[[S.sh[0]-20,S.sh[1]+3],[nk[0]-6,nk[1]],[nk[0]+6,nk[1]],[S.sh[0]+20,S.sh[1]+3]],B);
+    fillShape(c,torsoFront(S),B);
+    // 근육 결
+    defLine(c,at2(S,.8,-1),at2(S,.6,-1));defLine(c,at2(S,.48,0),at2(S,.1,0));
+    defLine(c,at2(S,.4,-7),at2(S,.4,7));defLine(c,at2(S,.27,-7),at2(S,.27,7));
+    c.save();c.strokeStyle="#9AA3AC";c.lineWidth=1.3;c.beginPath();c.moveTo(...at2(S,.66,-19));c.quadraticCurveTo(...at2(S,.58,-10),...at2(S,.64,-1));c.moveTo(...at2(S,.66,19));c.quadraticCurveTo(...at2(S,.58,10),...at2(S,.64,1));c.stroke();c.restore();
+    if(mus.has("chest")){for(const sg of[-1,1])fillShape(c,segShape(at2(S,.92,sg*10),at2(S,.62,sg*10),pw([[0,6],[.5,9.5],[1,5]]),pw([[0,6],[.5,9.5],[1,5]])),COL.hi,true)}
+    if(mus.has("back")){for(const sg of[-1,1])fillShape(c,[at2(S,.86,sg*24),at2(S,.72,sg*21),at2(S,.42,sg*13),at2(S,.6,sg*12),at2(S,.8,sg*17)],COL.hi,true)}
+    if(mus.has("core"))fillShape(c,segShape(at2(S,.12,0),at2(S,.56,0),()=>7.5,()=>7.5),COL.hi,true);
+    if(mus.has("rear"))fillShape(c,[[S.sh[0]-18,S.sh[1]+2],[S.sh[0]-6,S.sh[1]-8],[S.sh[0]+6,S.sh[1]-8],[S.sh[0]+18,S.sh[1]+2]],COL.hi,true);
+    for(const A of[S.armL,S.armR])drawArm(c,T,A,B,mus.has("bi")||mus.has("tri"));
+    for(const s of[S.shL,S.shR]){dot(c,s,9.5,B);if(mus.has("shoulder")||mus.has("rear")){c.save();c.shadowColor=COL.hi;c.shadowBlur=16;dot(c,s,9.5,COL.hi);c.restore()}}
+    if(T.hand==="bar"&&S.armL&&S.armR){c.save();c.lineCap="butt";line(c,[S.armL[2][0]-14,S.armL[2][1]],[S.armR[2][0]+14,S.armR[2][1]],4,"#5A626B");c.restore()}
+    fillShape(c,[[nk[0]-5.5,S.sh[1]-2],[nk[0]-5,nk[1]-6],[nk[0]+5,nk[1]-6],[nk[0]+5.5,S.sh[1]-2]],B);
+    dot(c,[S.sh[0],S.sh[1]-21],10.5,B);
+  }else{
+    drawLeg(c,S,S.leg2,F);drawArm(c,T,S.arm2,F);
+    fillShape(c,torsoSide(S),B);
+    // 근육 결 (복근·가슴 아래선)
+    defLine(c,at2(S,.66,0).map((v,i)=>v+S.front[i]*5),at2(S,.72,0).map((v,i)=>v+S.front[i]*12));
+    if(mus.has("chest"))fillShape(c,torsoSide(S,.58,.98,TF,()=>3),COL.hi,true);
+    if(mus.has("core"))fillShape(c,torsoSide(S,.06,.58,TF,()=>2),COL.hi,true);
+    if(mus.has("back"))fillShape(c,torsoSide(S,.4,.95,()=>2,TB),COL.hi,true);
+    if(mus.has("glute"))fillShape(c,torsoSide(S,-.06,.32,()=>-3,TB),COL.hi,true);
+    // 목·승모
+    const e=S.sh,hd=S.head;const n=[-S.dir[1],S.dir[0]];
+    fillShape(c,[[e[0]+n[0]*8,e[1]+n[1]*8],[hd[0]-S.dir[0]*8+n[0]*5,hd[1]-S.dir[1]*8+n[1]*5],[hd[0]-S.dir[0]*8-n[0]*5,hd[1]-S.dir[1]*8-n[1]*5],[e[0]-n[0]*9,e[1]-n[1]*9]],B);
+    dot(c,hd,10.5,B);
+    drawLeg(c,S,S.leg,B,mus.has("quad")||mus.has("ham"),mus.has("calf"));
+    // 어깨(삼각근) → 팔 위에 얹힘
+    const dl=[S.sh[0]-S.dir[0]*3,S.sh[1]-S.dir[1]*3];
+    drawArm(c,T,S.arm,B,mus.has("bi")||mus.has("tri"));
+    dot(c,dl,9.5,B);
+    if(mus.has("shoulder")||mus.has("rear")){c.save();c.shadowColor=COL.hi;c.shadowBlur=16;dot(c,dl,9.5,COL.hi);c.restore()}
+    if(S.arm)hand(c,T,S.arm[2]);
+  }
+  if(pain){const q=painPoint(S,pain);if(q){const pulse=(Math.sin(time*5)+1)/2;
+    c.save();c.strokeStyle=COL.pain;c.lineWidth=2.5;c.globalAlpha=.55+.45*pulse;c.beginPath();c.arc(q[0],q[1],9+4*pulse,0,7);c.stroke();
+    c.globalAlpha=1;dot(c,q,3.2,COL.pain);c.restore()}}
+}
+
+function cable(c,from,to){c.save();c.strokeStyle=COL.cable;c.lineWidth=1.5;c.setLineDash([4,3]);c.beginPath();c.moveTo(from[0],from[1]);c.lineTo(to[0],to[1]);c.stroke();c.restore();c.fillStyle=COL.cable;c.beginPath();c.arc(from[0],from[1],3.5,0,7);c.fill()}
+function P(c,pts,w){poly(c,pts,w||5,COL.prop)}
+function floor(c){line(c,[8,229],[312,229],2,"#24292F")}
+
+const handPt=S=>S.view==="front"?null:S.arm&&S.arm[2];
+const T={
+ bench:{mus:["chest"],hand:"db",props:(c,S)=>{P(c,[[92,172],[232,172]],6);P(c,[[110,172],[110,226]]);P(c,[[214,172],[214,226]])},
+  A:{hip:[208,163],tor:180,arm:{k:[170,178],t:[152,140]},leg:{t:[256,226],b:-1}},
+  B:{arm:{k:[150,128],t:[148,94]}}},
+ floor:{mus:["chest"],hand:"db",props:()=>{},
+  A:{hip:[200,219],tor:180,arm:{k:[166,222],t:[146,188]},leg:{t:[240,226],b:-1}},
+  B:{arm:{k:[141,186],t:[140,152]}}},
+ chestpress:{mus:["chest"],hand:"handle",props:(c,S)=>{P(c,[[118,180],[178,180]],6);P(c,[[136,182],[124,96]],6);P(c,[[148,182],[148,226]])},
+  A:{hip:[152,172],tor:-97,arm:{t:[172,108],b:1},leg:{t:[206,226],b:-1}},
+  B:{arm:{t:[212,106],b:1}}},
+ chestdec:{mus:["chest"],hand:"handle",props:(c,S)=>{P(c,[[118,180],[178,180]],6);P(c,[[136,182],[124,96]],6);P(c,[[148,182],[148,226]])},
+  A:{hip:[152,172],tor:-97,arm:{t:[170,124],b:1},leg:{t:[206,226],b:-1}},
+  B:{arm:{t:[208,134],b:1}}},
+ pushup:{mus:["chest"],face:-1,hand:"db",props:()=>{},
+  A:{hip:[214,186],tor:-156,arm:{t:[150,222],b:-1},leg:{t:[292,224],b:1}},
+  B:{hip:[210,206],tor:-170}},
+ landmine:{mus:["shoulder","chest"],props:(c,S)=>{const h=S.arm[2];const a=[58,226];const d=Math.hypot(h[0]-a[0],h[1]-a[1]);line(c,a,[h[0]+(h[0]-a[0])/d*14,h[1]+(h[1]-a[1])/d*14],5,"#5A626B");c.fillStyle="#5A626B";c.beginPath();c.arc(a[0],a[1],5,0,7);c.fill()},
+  A:{hip:[168,142],tor:-80,arm:{t:[190,92],b:1},leg:{t:[172,226],b:-1},leg2:{t:[140,226],b:-1}},
+  B:{arm:{t:[236,44],b:1}}},
+ ohp:{mus:["shoulder"],hand:"db",props:(c)=>{P(c,[[126,180],[186,180]],6);P(c,[[140,182],[140,96]],6);P(c,[[156,182],[156,226]])},
+  A:{hip:[160,172],tor:-90,arm:{t:[170,112],b:1},leg:{t:[208,226],b:-1}},
+  B:{arm:{t:[166,44],b:1}}},
+ lateral:{view:"front",mus:["shoulder"],hand:"db",props:()=>{},
+  A:{hip:[160,140],tor:-90,arm:{t:[190,140],b:1},leg:{t:[174,226],b:1}},
+  B:{arm:{t:[244,86],b:1}}},
+ latcable:{view:"front",mus:["shoulder"],hand:"handle",props:(c,S)=>{cable(c,[96,222],S.armR[2])},
+  A:{hip:[160,140],tor:-90,arm:{t:[178,146],b:1},leg:{t:[174,226],b:1}},
+  B:{arm:{t:[244,86],b:1}}},
+ rear:{view:"front",mus:["rear","back"],hand:"handle",props:()=>{},
+  A:{hip:[160,140],tor:-90,arm:{t:[172,100],b:-1},leg:{t:[174,226],b:1}},
+  B:{arm:{t:[242,92],b:-1}}},
+ facepull:{view:"front",mus:["rear"],props:()=>{},
+  A:{hip:[160,140],tor:-90,arm:{t:[172,100],b:-1},leg:{t:[174,226],b:1}},
+  B:{arm:{t:[200,60],b:-1}}},
+ fly:{view:"front",mus:["chest"],hand:"handle",props:()=>{},
+  A:{hip:[160,140],tor:-90,arm:{t:[240,92],b:-1},leg:{t:[174,226],b:1}},
+  B:{arm:{t:[168,104],b:-1}}},
+ flylow:{view:"front",mus:["chest"],hand:"handle",props:(c,S)=>{cable(c,[300,20],S.armR[2]);cable(c,[20,20],S.armL[2])},
+  A:{hip:[160,140],tor:-90,arm:{t:[238,62],b:-1},leg:{t:[174,226],b:1}},
+  B:{arm:{t:[168,138],b:-1}}},
+ pulldown:{view:"front",mus:["back"],hand:"bar",props:(c,S)=>{const m=[(S.armL[2][0]+S.armR[2][0])/2,S.armR[2][1]];cable(c,[160,8],m);P(c,[[120,182],[200,182]],6);P(c,[[130,166],[190,166]],4)},
+  A:{hip:[160,176],tor:-90,arm:{t:[204,52],b:1},leg:{k:[184,182],t:[184,226]}},
+  B:{arm:{t:[200,112],b:1}}},
+ straight:{mus:["back"],hand:"handle",props:(c,S)=>{cable(c,[300,14],S.arm[2])},
+  A:{hip:[150,140],tor:-62,arm:{t:[234,52],b:1},leg:{t:[162,226],b:-1}},
+  B:{arm:{t:[176,148],b:1}}},
+ row:{mus:["back"],hand:"handle",props:(c,S)=>{cable(c,[304,140],S.arm[2]);P(c,[[104,190],[176,190]],6);P(c,[[236,182],[236,226]],5)},
+  A:{hip:[140,182],tor:-82,arm:{t:[208,132],b:1},leg:{t:[230,206],b:-1}},
+  B:{tor:-92,arm:{t:[160,140],b:1}}},
+ mrow:{mus:["back"],hand:"handle",props:(c,S)=>{P(c,[[112,182],[172,182]],6);P(c,[[146,184],[146,226]]);P(c,[[184,98],[184,150]],7)},
+  A:{hip:[146,174],tor:-86,arm:{t:[222,120],b:1},leg:{t:[204,226],b:-1}},
+  B:{arm:{t:[164,126],b:1}}},
+ csrow:{mus:["back"],hand:"db",props:(c,S)=>{P(c,[[146,186],[204,104]],7);P(c,[[160,186],[160,226]])},
+  A:{hip:[144,174],tor:-55,arm:{t:[190,184],b:-1},leg:{t:[92,226],b:-1}},
+  B:{arm:{t:[170,150],b:-1}}},
+ onearm:{mus:["back"],hand:"db",props:(c)=>{P(c,[[150,172],[238,172]],6);P(c,[[162,172],[162,226]]);P(c,[[228,172],[228,226]])},
+  A:{hip:[160,138],tor:-4,arm:{t:[214,206],b:-1},arm2:{t:[224,170],b:1},leg:{t:[132,226],b:-1},leg2:{k:[178,168],t:[156,168]}},
+  B:{arm:{t:[198,150],b:-1}}},
+ legpress:{mus:["quad","glute"],props:(c,S)=>{P(c,[[60,186],[150,200]],7);P(c,[[96,192],[96,226]]);const f=S.leg[2];line(c,[f[0]-14,f[1]-14],[f[0]+14,f[1]+14],6,COL.prop);line(c,[f[0]+6,f[1]+6],[f[0]+40,f[1]-28],3,"#2C3138")},
+  A:{hip:[150,190],tor:-160,arm:{t:[140,202],b:1},leg:{t:[186,150],b:-1},ft:-45},
+  B:{leg:{t:[212,124],b:-1}}},
+ squat:{mus:["quad","glute"],props:()=>{},
+  A:{hip:[200,140],tor:-88,arm:{r:[34,14],b:1},leg:{t:[208,226],b:-1}},
+  B:{hip:[170,178],tor:-55}},
+ box:{mus:["quad","glute"],props:(c)=>{P(c,[[140,192],[184,192],[184,226]],5);P(c,[[140,192],[140,226]],5)},
+  A:{hip:[200,140],tor:-88,arm:{r:[34,14],b:1},leg:{t:[210,226],b:-1}},
+  B:{hip:[166,180],tor:-55}},
+ belt:{mus:["quad","glute"],props:(c,S)=>{line(c,S.hip,[S.hip[0],212],2,COL.cable);P(c,[[S.hip[0]-12,212],[S.hip[0]+12,212]],8)},
+  A:{hip:[180,140],tor:-84,arm:{r:[26,30],b:1},leg:{t:[200,226],b:-1},leg2:{t:[160,226],b:-1}},
+  B:{hip:[180,180],tor:-74}},
+ hack:{mus:["quad","glute"],props:(c,S)=>{const a=rad(S.p.tor+180);line(c,[S.hip[0]-10+70*Math.cos(rad(S.p.tor)),S.hip[1]+70*Math.sin(rad(S.p.tor))],[S.hip[0]-10+20*Math.cos(a),S.hip[1]+20*Math.sin(a)],6,COL.prop)},
+  A:{hip:[184,140],tor:-80,arm:{r:[10,-6],b:1},leg:{t:[214,226],b:-1}},
+  B:{hip:[160,180],tor:-70}},
+ split:{mus:["quad","glute"],props:()=>{},
+  A:{hip:[186,140],tor:-88,arm:{r:[0,62],b:1},leg:{t:[232,226],b:-1},leg2:{t:[132,226],b:-1},},
+  B:{hip:[184,180],tor:-86}},
+ smithsplit:{mus:["quad","glute"],props:(c,S)=>{P(c,[[S.sh[0]-6,S.sh[1]+2],[S.sh[0]+6,S.sh[1]+2]],10);line(c,[100,4],[100,226],2,"#2C3138");line(c,[270,4],[270,226],2,"#2C3138")},
+  A:{hip:[186,140],tor:-88,arm:{r:[4,-2],b:1},leg:{t:[232,226],b:-1},leg2:{t:[132,226],b:-1}},
+  B:{hip:[184,180],tor:-86}},
+ legext:{mus:["quad"],props:(c,S)=>{P(c,[[118,180],[198,180]],6);P(c,[[132,182],[122,100]],6);P(c,[[150,182],[150,226]]);const f=S.leg[2];c.fillStyle=COL.prop;c.beginPath();c.arc(f[0]+3,f[1]+3,6,0,7);c.fill()},
+  A:{hip:[152,172],tor:-96,arm:{t:[160,184],b:1},leg:{t:[204,220],b:-1}},
+  B:{leg:{t:[242,166],b:-1}}},
+ legextp:{mus:["quad"],props:(c,S)=>{P(c,[[118,180],[198,180]],6);P(c,[[132,182],[122,100]],6);P(c,[[150,182],[150,226]]);const f=S.leg[2];c.fillStyle=COL.prop;c.beginPath();c.arc(f[0]+3,f[1]+3,6,0,7);c.fill()},
+  A:{hip:[152,172],tor:-96,arm:{t:[160,184],b:1},leg:{t:[236,186],b:-1}},
+  B:{leg:{t:[241,170],b:-1}}},
+ lcurl:{mus:["ham"],face:-1,props:(c)=>{P(c,[[70,172],[236,172]],6);P(c,[[90,172],[90,226]]);P(c,[[220,172],[220,226]])},
+  A:{hip:[168,162],tor:180,arm:{t:[70,186],b:-1},leg:{t:[256,164],b:1}},
+  B:{leg:{t:[212,120],b:1}}},
+ thrust:{mus:["glute","ham"],props:(c)=>{P(c,[[92,160],[132,160]],7);P(c,[[100,160],[100,226]])},
+  A:{hip:[176,198],tor:-142,arm:{t:[150,206],b:1},leg:{t:[232,226],b:-1}},
+  B:{hip:[190,152],tor:-178}},
+ bridge:{mus:["glute"],props:()=>{},
+  A:{hip:[176,220],tor:178,arm:{t:[176,224],b:-1},leg:{t:[222,226],b:-1}},
+  B:{hip:[176,190],tor:152}},
+ curl:{mus:["bi"],hand:"db",props:()=>{},
+  A:{hip:[160,140],tor:-90,arm:{k:[170,110],t:[176,142]},leg:{t:[166,226],b:-1}},
+  B:{arm:{k:[170,110],t:[188,82]}}},
+ ccurl:{mus:["bi"],hand:"handle",props:(c,S)=>{cable(c,[232,224],S.arm[2])},
+  A:{hip:[160,140],tor:-90,arm:{k:[170,110],t:[176,142]},leg:{t:[166,226],b:-1}},
+  B:{arm:{k:[170,110],t:[188,82]}}},
+ preacher:{mus:["bi"],hand:"db",props:(c)=>{P(c,[[170,104],[212,150]],7);P(c,[[118,180],[178,180]],6);P(c,[[150,182],[150,226]])},
+  A:{hip:[152,172],tor:-80,arm:{k:[190,120],t:[220,146]},leg:{t:[204,226],b:-1}},
+  B:{arm:{k:[190,120],t:[192,88]}}},
+ pushdown:{mus:["tri"],hand:"handle",props:(c,S)=>{cable(c,[206,8],S.arm[2])},
+  A:{hip:[160,140],tor:-84,arm:{t:[194,88],b:1},leg:{t:[168,226],b:-1}},
+  B:{arm:{t:[176,144],b:1}}},
+ dip:{mus:["tri","chest"],hand:"handle",props:(c)=>{P(c,[[120,182],[180,182]],6);P(c,[[136,184],[128,104]],6);P(c,[[150,184],[150,226]])},
+  A:{hip:[156,174],tor:-94,arm:{k:[130,138],t:[160,148]},leg:{t:[208,226],b:-1}},
+  B:{arm:{k:[156,146],t:[162,178]}}},
+ crunch:{mus:["core"],props:(c,S)=>{cable(c,[236,8],S.arm[2])},
+  A:{hip:[176,182],tor:-96,arm:{r:[10,-10],b:1},leg:{k:[180,226],t:[132,226]}},
+  B:{hip:[168,184],tor:-28}},
+ deadbug:{mus:["core"],props:()=>{},
+  A:{hip:[184,216],tor:180,arm:{t:[124,152],b:1},arm2:{t:[124,152],b:1},leg:{k:[186,170],t:[228,170]},leg2:{k:[186,170],t:[228,170]}},
+  B:{arm:{t:[62,206],b:1},leg:{k:[228,206],t:[270,212]}}},
+ rcrunch:{mus:["core"],props:()=>{},
+  A:{hip:[190,216],tor:180,arm:{t:[190,222],b:-1},leg:{k:[192,168],t:[232,170]}},
+  B:{hip:[186,200],tor:168,leg:{k:[160,150],t:[196,140]}}},
+ pallof:{mus:["core"],hand:"handle",props:(c)=>{c.fillStyle=COL.cable;c.font="600 11px sans-serif";c.fillText("옆에서 당기는 케이블 ⟶ 버티기",80,22)},
+  A:{hip:[160,140],tor:-90,arm:{r:[14,22],b:1},leg:{t:[170,226],b:-1},leg2:{t:[146,226],b:-1}},
+  B:{arm:{r:[62,22],b:1}}},
+ plank:{mus:["core"],face:-1,props:()=>{},
+  A:{hip:[212,198],tor:-170,arm:{k:[152,226],t:[182,224]},leg:{t:[290,224],b:1}},
+  B:{hip:[212,194],tor:-168}},
+ kneeraise:{mus:["core"],props:(c)=>{P(c,[[142,72],[142,170]],7);P(c,[[150,112],[200,112]],5);P(c,[[142,170],[142,226]],5)},
+  A:{hip:[156,148],tor:-90,arm:{k:[158,114],t:[194,108]},leg:{t:[162,234],b:-1}},
+  B:{leg:{t:[206,176],b:-1}}},
+ scalf:{mus:["calf"],props:(c,S)=>{P(c,[[118,166],[200,166]],6);P(c,[[150,168],[150,226]]);P(c,[[186,160],[214,160]],6);P(c,[[200,216],[226,216]],6)},
+  A:{hip:[152,156],tor:-90,arm:{t:[190,152],b:1},leg:{k:[200,156],t:[200,210]},ft:12},
+  B:{leg:{k:[200,147],t:[203,200]},ft:46}},
+ stcalf:{mus:["calf"],props:(c,S)=>{P(c,[[S.sh[0]-8,S.sh[1]+2],[S.sh[0]+8,S.sh[1]+2]],10);P(c,[[192,220],[226,220]],6);line(c,[110,4],[110,226],2,"#2C3138");line(c,[262,4],[262,226],2,"#2C3138")},
+  A:{hip:[200,130],tor:-90,arm:{r:[4,-2],b:1},leg:{t:[202,214],b:-1},ft:12},
+  B:{hip:[203,120],leg:{t:[205,204],b:-1},ft:46}}
+};
+
+function templateFor(name,part){
+  const n=name;
+  const has=(...k)=>k.some(s=>n.includes(s));
+  if(has("랜드마인"))return"landmine";
+  if(has("리어 레터럴","리버스 펙덱","풀어파트"))return"rear";
+  if(has("페이스풀"))return"facepull";
+  if(has("레터럴"))return has("케이블")?"latcable":"lateral";
+  if(has("숄더프레스","등받이 80도")||(part==="shoulder"&&has("프레스")))return"ohp";
+  if(has("하이-투-로우"))return"flylow";
+  if(has("펙덱","플라이","크로스오버"))return"fly";
+  if(has("스트레이트암"))return"straight";
+  if(has("풀다운"))return"pulldown";
+  if(has("디클라인"))return"chestdec";
+  if(has("체스트프레스","체스트 프레스","머신 프레스"))return"chestpress";
+  if(has("플로어 프레스"))return"floor";
+  if(has("푸시업"))return"pushup";
+  if(has("딥 머신"))return"dip";
+  if(has("푸시다운"))return"pushdown";
+  if(has("프리처"))return"preacher";
+  if(has("케이블 컬","로프 해머컬"))return"ccurl";
+  if(has("컬")&&!has("레그컬","크런치","컬업"))return"curl";
+  if(has("체스트 서포티드"))return"csrow";
+  if(has("원암 덤벨 로우"))return"onearm";
+  if(has("로우"))return has("케이블")?"row":"mrow";
+  if(has("시티드 카프"))return"scalf";
+  if(has("카프"))return"stcalf";
+  if(has("레그프레스"))return"legpress";
+  if(has("벨트 스쿼트"))return"belt";
+  if(has("핵스쿼트"))return"hack";
+  if(has("박스 스쿼트"))return"box";
+  if(has("스미스 스플릿"))return"smithsplit";
+  if(has("스플릿","런지"))return"split";
+  if(has("버티기 30~45초","짧은 범위 (상단"))return"legextp";
+  if(has("레그익스텐션"))return"legext";
+  if(has("레그컬"))return"lcurl";
+  if(has("힙 쓰러스트"))return"thrust";
+  if(has("글루트 브릿지"))return"bridge";
+  if(has("크런치")&&has("리버스"))return"rcrunch";
+  if(has("크런치"))return"crunch";
+  if(has("데드버그"))return"deadbug";
+  if(has("팔로프"))return"pallof";
+  if(has("플랭크"))return"plank";
+  if(has("니레이즈"))return"kneeraise";
+  if(has("덤벨 프레스"))return"bench";
+  return null;
+}
+const MUS_KO={chest:"가슴",back:"등(광배)",shoulder:"어깨",rear:"후면 어깨",bi:"이두",tri:"삼두",quad:"허벅지 앞",ham:"햄스트링",glute:"엉덩이",calf:"종아리",core:"복근·코어"};
+const PAIN_AT={shoulder:"shoulder",rib:"rib",elbow:"elbow","elbow-out":"elbow","elbow-in":"elbow","elbow-back":"elbow",wrist:"hand",lowback:"low",neck:"neck",knee:"knee",hip:"hip",ankle:"ankle",ham:"thigh",tail:"tail"};
+
+function ease(t){return t<.5?2*t*t:1-Math.pow(-2*t+2,2)/2}
+function phaseT(time){ // 0..3s 루프: 힘주기 1.0s, 정지 .4s, 돌아오기 1.4s, 정지 .2s
+  const t=time%3;
+  if(t<1)return ease(t);if(t<1.4)return 1;if(t<2.8)return 1-ease((t-1.4)/1.4);return 0;
+}
+function render(c,key,pain,time,tFixed){
+  const Tm=T[key];
+  const t=tFixed!==undefined?tFixed:phaseT(time);
+  const p=lerpPose(Tm.A,{...Tm.A,...Tm.B},t);
+  const S=solve(Tm,p);
+  c.fillStyle=COL.bg;c.fillRect(0,0,320,240);
+  floor(c);
+  Tm.props&&Tm.props(c,S);
+  drawFigure(c,Tm,S,pain,time);
+}
+
+const PARTS=[
+ {id:"chest",name:"가슴",sub:"벤치 · 플라이 · 딥스"},
+ {id:"back",name:"등",sub:"로우 · 풀다운 · 데드"},
+ {id:"shoulder",name:"어깨",sub:"프레스 · 레터럴"},
+ {id:"legs",name:"하체",sub:"스쿼트 · 런지 · 프레스"},
+ {id:"arms",name:"팔",sub:"이두 · 삼두"},
+ {id:"core",name:"코어",sub:"크런치 · 레그레이즈"}
+];
+
+const RED_BACK=["엉덩이 아래 다리로 뻗치는 저림이나 당김","다리에 힘이 빠지거나 발끝이 끌림","대소변 이상, 사타구니·항문 주변 감각 둔해짐 → 바로 응급실","쉬어도, 밤에 누워도 계속 심해지는 통증이나 열"];
+const RED_RIB=["숨 들이쉴 때 찌르는 듯한 통증","부딪힌 뒤 한 점을 누르면 극심하게 아픔 (골절 의심)","가슴 조임과 식은땀, 숨참, 왼팔·턱으로 퍼지는 통증 → 운동 중단, 119"];
+
+const DATA={
+chest:[
+ {id:"shoulder",name:"어깨 앞쪽",
+  cause:"바닥까지 깊게 내리거나 팔꿈치를 90도로 벌리면 팔뼈 머리가 앞으로 밀리면서 어깨 앞쪽(이두건·전면 관절낭)이 눌려요. 견갑이 풀리면 더 심해져요.",
+  avoid:["바벨 벤치 풀 가동범위","딥스","깊은 덤벨 플라이"],
+  swaps:[
+   {from:"바벨 벤치프레스",to:[
+    ["뉴트럴그립 덤벨 프레스","손바닥을 마주보게 잡고 팔꿈치를 몸통에서 45도로. 어깨 앞 부담이 가장 적은 각도예요."],
+    ["머신 체스트프레스","궤도가 고정돼서 어깨가 흔들리지 않아요. 시트를 높여 손잡이가 가슴 중앙 높이에 오게."],
+    ["플로어 프레스","바닥이 가동범위를 막아줘서 팔꿈치가 몸통 뒤로 넘어가지 않아요."]]},
+   {from:"딥스",to:[
+    ["디클라인 머신 프레스","하부 가슴 자극은 그대로, 어깨 과신전은 없어요."],
+    ["하이-투-로우 케이블 크로스오버","위에서 아래로 모으기. 팔을 몸통 뒤로 빼지 않는 범위까지만."]]},
+   {from:"덤벨 플라이",to:[
+    ["펙덱 플라이","손잡이가 몸통 라인보다 뒤로 가지 않게 시작점 조절."],
+    ["케이블 플라이 (가슴 높이)","끝 지점에서도 장력이 유지돼서 가볍게도 충분히 자극돼요."]]}],
+  tips:["견갑을 뒤로·아래로 고정하고 가슴을 들어요","가슴에 닿기 1~2cm 전에 멈춰요","팔꿈치는 몸통에서 45도, 손목 위에 팔꿈치"],
+  prehab:["밴드 외회전 2×15","페이스풀 2×15","밴드 풀어파트 2×20"],
+  red:["팔을 옆으로 들 때 특정 각도에서 찌릿 + 밤에 그쪽으로 눕기 힘듦 (회전근개 의심)","팔을 스스로 못 들 정도로 힘이 빠짐","벤치 중 ‘뚝’ 소리 후 겨드랑이·가슴에 멍이나 함몰 (대흉근 파열 의심) → 즉시 진료"]},
+ {id:"rib",name:"갈비뼈",
+  cause:"아치를 과하게 만들고 숨을 꽉 참은 채 무겁게 밀면 흉곽과 늑연골, 갈비뼈 사이 근육에 부하가 몰려요. 깊은 스트레치 동작도 자극이 커요.",
+  avoid:["과한 아치 벤치","덤벨 풀오버","깊은 스트레치 플라이","딥스"],
+  swaps:[
+   {from:"바벨 벤치프레스",to:[
+    ["머신 체스트프레스","등을 패드에 붙이고 아치를 최소로. 흉곽이 고정돼요."],
+    ["덤벨 프레스 (가볍게 12~15회)","무게를 낮추고 반복을 늘리면 숨 참는 시간이 짧아져요."]]},
+   {from:"플라이 · 풀오버",to:[
+    ["펙덱 (짧은 범위)","가슴이 많이 늘어나기 전 지점에서 시작."],
+    ["서서 하는 케이블 크로스오버","흉곽을 늘리지 않고 수축 구간 위주로."]]}],
+  tips:["갈비뼈를 내리고 아치는 엉덩이가 아닌 등 위쪽으로만","내릴 때 들이마시고, 밀 때 내쉬기","기침·재채기에도 아프면 무게 절반 이하"],
+  prehab:["90/90 호흡 (누워서 발 벤치에) 5회×5숨","데드버그 2×10"],
+  red:RED_RIB},
+ {id:"elbow",name:"팔꿈치",
+  cause:"일자 바는 손목과 팔꿈치 회전을 막아서 힘이 팔꿈치에 걸려요. 락아웃 때 팔꿈치를 꽉 잠그는 습관도 원인이에요.",
+  avoid:["좁은 그립 바벨 벤치","딥스"],
+  swaps:[
+   {from:"바벨 벤치프레스",to:[
+    ["덤벨 프레스","손목이 자연스럽게 돌아가서 팔꿈치 비틀림이 줄어요."],
+    ["뉴트럴 손잡이 머신 프레스","손목·팔꿈치가 일직선으로 정렬돼요."]]},
+   {from:"딥스",to:[
+    ["머신 체스트프레스","같은 하부·전체 가슴 자극, 팔꿈치 각도는 덜 깊게."]]}],
+  tips:["끝까지 잠그지 말고 직전에서 다시 내려요","팔꿈치가 손목 바로 아래에 오게","팔꿈치 슬리브로 보온"],
+  prehab:["손목 굴곡·신전 가벼운 덤벨 2×15","리버스 해머컬 가볍게 2×15"],
+  red:["팔꿈치가 붓고 뜨거움","약지·새끼손가락 저림 (척골신경)","팔을 끝까지 못 펴거나 못 굽힘"]},
+ {id:"wrist",name:"손목",
+  cause:"바가 손가락 쪽에 걸리면 손목이 뒤로 꺾인 채로 무게를 받아요.",
+  avoid:["바벨 벤치 (손목 꺾인 상태)","손바닥 푸시업"],
+  swaps:[
+   {from:"바벨 벤치프레스",to:[
+    ["뉴트럴그립 덤벨 프레스","손목을 일자로 유지하기 가장 쉬워요."],
+    ["머신 체스트프레스 (뉴트럴 손잡이)","손목에 꺾임이 거의 없어요."]]},
+   {from:"푸시업",to:[
+    ["푸시업 바 / 덤벨 잡고 푸시업","손목이 일자가 돼서 체중이 뼈로 바로 전달돼요."]]}],
+  tips:["바를 손바닥 아래쪽, 손목 바로 위에 얹어요","손목 랩으로 지지","주먹을 꽉 쥐어 손목을 세워요"],
+  prehab:["손목 굴곡·신전 가벼운 덤벨 2×15","라이스 버킷 대신 고무공 쥐기 2×20"],
+  red:["넘어진 뒤 엄지 쪽 손목 오목한 곳이 아픔 (주상골 골절 의심 → X-ray)","밤에 엄지~약지가 저려서 깸 (손목터널)"]}
+],
+back:[
+ {id:"lowback",name:"허리",
+  cause:"상체를 숙인 채 버티는 동작은 등이 아니라 척추기립근이 먼저 지쳐요. 세트 후반에 허리가 말리면서 통증이 와요.",
+  avoid:["바벨 벤트오버 로우","컨벤셔널 데드리프트","프리 티바 로우","굿모닝"],
+  swaps:[
+   {from:"바벨 벤트오버 로우",to:[
+    ["체스트 서포티드 로우 (머신·인클라인 벤치)","가슴을 패드에 기대서 허리 부담이 거의 0이에요. 등 두께 1순위."],
+    ["시티드 케이블 로우","척추 중립 유지, 상체는 고정하고 팔꿈치만 뒤로."],
+    ["원암 덤벨 로우 (벤치 지지)","한 손·한 무릎을 벤치에 올리면 허리가 받쳐져요."]]},
+   {from:"데드리프트 (등 두께용)",to:[
+    ["해머스트렝스 로우 / 머신 로우","무겁게 당겨도 허리는 패드가 받쳐줘요."],
+    ["체스트 서포티드 티바 로우","티바 자극 그대로, 허리 부하는 빠져요."]]},
+   {from:"중량 풀업",to:[
+    ["랫풀다운 (허벅지 패드 고정)","허리를 과하게 젖히지 않고 광배에 집중."]]}],
+  tips:["앉거나 기대는 등 운동 위주로 구성","무게보다 수축 1초 정지","벨트를 통증 무시용으로 쓰지 않기"],
+  prehab:["맥길 컬업 3×8초 홀드","사이드 플랭크 3×20초","버드독 2×8"],
+  red:RED_BACK},
+ {id:"rib",name:"갈비뼈 · 옆구리",
+  cause:"광배를 깊게 늘리는 동작이나 한 팔 로우에서 몸통을 비틀면 옆구리 늑간근이 당겨져요.",
+  avoid:["덤벨 풀오버","몸통 비트는 원암 로우","데드행 풀업"],
+  swaps:[
+   {from:"원암 덤벨 로우",to:[
+    ["양손 머신 로우","몸통 회전이 없어서 옆구리를 안 써요."],
+    ["체스트 서포티드 로우","흉곽이 패드에 고정돼요."]]},
+   {from:"풀오버 · 풀업",to:[
+    ["랫풀다운 (위에서 덜 늘리기)","팔을 완전히 뻗기 직전부터 당겨요."],
+    ["케이블 스트레이트암 풀다운 (짧은 범위)","머리 위로 깊게 올리지 않고 얼굴 높이에서 시작."]]}],
+  tips:["양손 동시 동작으로 비틀림 없애기","당길 때 숨 내쉬기"],
+  prehab:["90/90 호흡 5회×5숨","데드버그 2×10"],
+  red:RED_RIB},
+ {id:"elbow",name:"팔꿈치 안쪽",
+  cause:"언더그립·좁은 그립으로 당기면 이두와 손목 굴곡근이 과하게 일해서 팔꿈치 안쪽(골퍼스 엘보)이 아파요.",
+  avoid:["언더그립 풀업·랫풀","언더그립 바벨 로우"],
+  swaps:[
+   {from:"풀업 · 랫풀다운",to:[
+    ["V바(뉴트럴) 랫풀다운 + 스트랩","그립 힘을 스트랩이 대신해요."],
+    ["머신 풀다운 (뉴트럴 손잡이)","손목이 고정돼서 비틀림이 없어요."]]},
+   {from:"바벨 로우",to:[
+    ["뉴트럴 손잡이 체스트 서포티드 로우","팔꿈치를 몸에 붙여 당기면 이두 개입이 줄어요."]]}],
+  tips:["손은 갈고리처럼 걸고 팔꿈치로 당긴다는 느낌","스트랩 적극 사용"],
+  prehab:["가벼운 리스트 컬 편심(내리기 3초) 2×15"],
+  red:["약지·새끼손가락 저림","팔꿈치 안쪽 붓기·멍"]},
+ {id:"neck",name:"목 · 승모",
+  cause:"당길 때 어깨를 으쓱하거나 턱을 앞으로 내밀면 상부 승모와 목이 일을 대신해요.",
+  avoid:["비하인드넥 랫풀다운","무거운 바벨 슈러그"],
+  swaps:[
+   {from:"비하인드넥 랫풀다운",to:[
+    ["프론트 랫풀다운","쇄골 쪽으로 당기면 목을 숙일 필요가 없어요."]]},
+   {from:"바벨 로우 · 슈러그",to:[
+    ["시티드 케이블 로우 (견갑 내리고 시작)","시작 전에 어깨를 귀에서 멀리."],
+    ["리버스 펙덱","승모 개입 없이 등 위쪽·후면 어깨."]]}],
+  tips:["세트 시작 전에 견갑 먼저 내리기","턱 살짝 당기고 시선 정면"],
+  prehab:["친 턱 2×10","밴드 풀어파트 2×20"],
+  red:["팔이나 손가락으로 뻗치는 저림 (경추 신경)","어지럼·심한 두통 동반"]}
+],
+shoulder:[
+ {id:"shoulder",name:"어깨 (들 때 찝힘)",
+  cause:"팔을 옆으로 높이 들거나 머리 뒤로 프레스하면 어깨 위쪽 공간이 좁아져 회전근개가 끼어요.",
+  avoid:["비하인드넥 프레스","좁은 그립 업라이트 로우","어깨 위까지 드는 레터럴"],
+  swaps:[
+   {from:"바벨 오버헤드 프레스",to:[
+    ["랜드마인 프레스","사선 궤도라서 어깨 끼임이 가장 적어요. 1순위."],
+    ["뉴트럴그립 덤벨 숄더프레스","팔을 몸 약간 앞(30도)으로 두고 귀 높이까지만 내려요."],
+    ["머신 숄더프레스 (하강 범위 줄이기)","손잡이가 턱 높이에 오면 멈춰요."]]},
+   {from:"덤벨 사이드 레터럴",to:[
+    ["케이블 레터럴 (견갑면)","몸 앞 30도 방향으로 어깨 높이까지만. 엄지 살짝 위로."],
+    ["머신 레터럴","궤도가 고정돼서 각도 실수가 없어요."]]},
+   {from:"업라이트 로우",to:[
+    ["케이블 레터럴","측면 삼각근 자극은 그대로, 끼임은 없어요."]]}],
+  tips:["어깨 높이 이상으로 들지 않기","귀와 어깨 멀게, 으쓱 금지","시작 전 회전근개 워밍업"],
+  prehab:["밴드 외회전 2×15","페이스풀 2×15","Y-레이즈 (가볍게) 2×12"],
+  red:["팔을 스스로 못 들거나 밤에 통증으로 깸","빠지는 느낌·탈구 경험","외상 후 갑자기 힘이 빠짐"]},
+ {id:"neck",name:"목 · 승모",
+  cause:"무거운 프레스와 레터럴에서 상부 승모가 먼저 올라가면 목 옆이 뻐근해져요.",
+  avoid:["무거운 스탠딩 프레스","무거운 업라이트 로우","슈러그"],
+  swaps:[
+   {from:"스탠딩 오버헤드 프레스",to:[
+    ["등받이 있는 머신 숄더프레스","몸이 고정돼서 목·승모 보상이 줄어요."]]},
+   {from:"덤벨 레터럴",to:[
+    ["케이블 레터럴 (가볍게 15~20회)","무게를 낮추면 승모 개입이 바로 줄어요."],
+    ["인클라인 벤치 엎드려 레터럴","상체가 기대서 으쓱하기 어려워요."]]}],
+  tips:["새끼손가락이 약간 위로 가게 들기","턱 당기고 시선 정면"],
+  prehab:["친 턱 2×10","밴드 풀어파트 2×20"],
+  red:["팔로 뻗치는 저림","손 힘이 약해짐"]},
+ {id:"elbow",name:"팔꿈치",
+  cause:"일자 바 프레스는 손목이 고정돼 팔꿈치에 비틀림이 걸리고, 락아웃 때 충격이 커요.",
+  avoid:["바벨 오버헤드 프레스","락아웃 강하게"],
+  swaps:[
+   {from:"바벨 오버헤드 프레스",to:[
+    ["덤벨 숄더프레스","손목이 자유롭게 돌아가요."],
+    ["뉴트럴 손잡이 머신 프레스","팔꿈치가 손목 아래로 정렬돼요."]]},
+   {from:"레터럴",to:[
+    ["팔꿈치 살짝 굽힌 케이블 레터럴","팔꿈치에 걸리는 지렛대가 짧아져요."]]}],
+  tips:["끝까지 잠그지 말기","팔꿈치 슬리브"],
+  prehab:["리버스 해머컬 가볍게 2×15"],
+  red:["붓기·열감","손가락 저림"]},
+ {id:"lowback",name:"허리",
+  cause:"서서 프레스할 때 허리를 젖혀 가슴 프레스처럼 밀면 요추에 부하가 몰려요.",
+  avoid:["스탠딩 바벨 프레스","벤트오버 리어 레터럴"],
+  swaps:[
+   {from:"스탠딩 오버헤드 프레스",to:[
+    ["시티드 머신 숄더프레스","등받이에 등을 붙이면 허리가 젖혀지지 않아요."],
+    ["시티드 덤벨 프레스 (등받이 80도)","90도보다 약간 눕혀서 허리 아치를 줄여요."]]},
+   {from:"벤트오버 리어 레터럴",to:[
+    ["리버스 펙덱","앉아서 가슴을 패드에 대고 해요. 허리 부담 0."],
+    ["인클라인 벤치 엎드려 리어 레터럴","상체가 벤치에 기대요."]]}],
+  tips:["갈비뼈 내리고 복부에 힘","엉덩이를 시트에 붙이기"],
+  prehab:["데드버그 2×10","맥길 컬업 3×8초"],
+  red:RED_BACK}
+],
+legs:[
+ {id:"knee",name:"무릎",
+  cause:"깊게 앉으면서 무릎이 많이 앞으로 나가면 슬개골·슬개건에 압박이 커져요. 레그익스텐션 시작 구간도 부담이 커요.",
+  avoid:["무거운 바벨 풀스쿼트","레그익스텐션 깊은 각도","점프 런지"],
+  swaps:[
+   {from:"바벨 스쿼트",to:[
+    ["레그프레스 (발판 높게)","발을 높이 두면 무릎이 덜 굽혀지고 둔근 비중이 커져요. 1순위."],
+    ["박스 스쿼트 (평행 높이)","박스가 깊이를 정해줘서 통증 없는 범위만 써요."],
+    ["벨트 스쿼트","무릎이 정강이 위에 머물게 세팅하기 쉬워요."]]},
+   {from:"런지",to:[
+    ["리버스 런지","뒤로 내딛으면 무릎이 앞으로 덜 나가요."],
+    ["스미스 스플릿 스쿼트 (짧은 보폭)","균형 부담 없이 범위를 조절해요."]]},
+   {from:"레그익스텐션",to:[
+    ["레그익스텐션 짧은 범위 (상단 1/2)","통증 없는 각도에서만, 상단에서 2초 정지."],
+    ["통증 없는 각도에서 버티기 30~45초","통증이 3/10을 넘지 않는 각도로."]]}],
+  tips:["통증 3/10 이하 범위에서만","자전거 5~10분으로 관절 데우고 시작","레그컬·힙 운동은 그대로 진행"],
+  prehab:["스페인 스쿼트 (밴드) 3×30초","힙 어브덕션 머신 2×15"],
+  red:["무릎이 붓고 뜨거움","걸리거나 잠기는 느낌, 갑자기 빠지는 느낌 (반월상·인대)","체중을 싣지 못함"]},
+ {id:"lowback",name:"허리",
+  cause:"바벨을 등에 지는 동작과 엉덩이를 접는 동작은 허리에 직접 하중이 걸려요. 레그프레스도 너무 깊으면 골반이 말려요.",
+  avoid:["바벨 백스쿼트","무거운 루마니안 데드","굿모닝"],
+  swaps:[
+   {from:"바벨 백스쿼트",to:[
+    ["벨트 스쿼트","하중이 골반에 걸려서 척추 압박이 없어요. 1순위."],
+    ["핵스쿼트 (등패드)","등을 받쳐줘요. 깊이는 허리가 뜨기 전까지."],
+    ["레그프레스 (엉덩이 안 뜨는 깊이)","엉덩이가 패드에서 뜨기 직전에 멈춰요."]]},
+   {from:"루마니안 데드리프트",to:[
+    ["시티드 / 라잉 레그컬","햄스트링을 허리 개입 없이."],
+    ["머신 힙 쓰러스트","등이 패드에 기대 있어서 둔근만 써요."]]},
+   {from:"불가리안 스플릿 스쿼트",to:[
+    ["스미스 스플릿 스쿼트","균형 잡느라 허리가 버틸 필요가 없어요."]]}],
+  tips:["허리 아픈 날은 머신 하체로 전부 구성 가능","골반 말림이 생기는 깊이를 거울로 확인"],
+  prehab:["맥길 컬업 3×8초","사이드 플랭크 3×20초","글루트 브릿지 2×15"],
+  red:RED_BACK},
+ {id:"hip",name:"고관절 앞쪽",
+  cause:"깊게 앉을 때 허벅지 뼈와 골반 앞쪽이 부딪히며 찝혀요. 스탠스가 좁을수록 심해요.",
+  avoid:["좁은 스탠스 딥스쿼트","깊은 레그프레스"],
+  swaps:[
+   {from:"딥스쿼트",to:[
+    ["박스 스쿼트 (스탠스 넓게)","발을 어깨보다 넓게, 발끝 15~30도 바깥."],
+    ["핵스쿼트 (발 넓게, 깊이 제한)","찝히기 직전 깊이까지만."]]},
+   {from:"레그프레스",to:[
+    ["레그프레스 발 넓게·높게, 범위 줄이기","무릎이 가슴 쪽으로 너무 오지 않게."],
+    ["원레그 레그프레스 (약간 바깥 방향)","골반 각도를 자유롭게 맞춰요."]]}],
+  tips:["찝히는 깊이 바로 위에서 멈추기","발끝 방향과 무릎 방향 일치"],
+  prehab:["90/90 고관절 스트레칭 2×30초","힙 어브덕션 머신 2×15"],
+  red:["사타구니 깊은 곳 통증으로 걸을 때 절뚝임","딸깍 소리와 잠기는 느낌","밤에도 쑤심"]},
+ {id:"ankle",name:"발목 · 아킬레스",
+  cause:"스쿼트·런지 바닥 구간에서 발목이 많이 접히고, 서서 하는 카프레이즈·점프는 아킬레스에 충격이 커요.",
+  avoid:["점프·박스 점프","깊은 스쿼트","무거운 스탠딩 카프레이즈"],
+  swaps:[
+   {from:"스쿼트 · 런지",to:[
+    ["레그프레스 (발 높게)","발목이 거의 안 접혀요."],
+    ["레그익스텐션 + 레그컬 조합","발목 개입 없이 하체 전체."]]},
+   {from:"스탠딩 카프레이즈",to:[
+    ["시티드 카프레이즈 (짧은 범위)","무게가 덜 걸리고 범위 조절이 쉬워요."]]}],
+  tips:["뒤꿈치 높은 신발이나 원판 받침","통증 없는 범위만"],
+  prehab:["벽 발목 가동성 2×10","가벼운 시티드 카프 편심 2×15"],
+  red:["삔 뒤 네 걸음도 못 걸음","복사뼈 뒤쪽이나 발 바깥 뼈를 누르면 아픔 (골절 의심 → X-ray)","아킬레스 ‘뚝’ 소리 후 발끝으로 못 섬 → 즉시 진료"]}
+],
+arms:[
+ {id:"elbow-out",name:"팔꿈치 바깥",
+  cause:"손목을 펴는 근육이 과하게 일할 때 생겨요 (테니스 엘보). 리버스 컬, 꽉 쥐는 그립, 일자 바가 주범이에요.",
+  avoid:["리버스 컬","일자 바 바벨 컬","무거운 리스트 익스텐션"],
+  swaps:[
+   {from:"바벨 컬",to:[
+    ["케이블 컬 (로프·EZ바)","손목 각도를 자유롭게 맞출 수 있어요."],
+    ["머신 프리처 컬","팔이 고정돼서 손목으로 버티지 않아요."]]},
+   {from:"리버스 컬",to:[
+    ["해머컬 (가볍게)","전완 자극은 남기고 손목 신전근 부담은 줄여요."]]},
+   {from:"스컬크러셔",to:[
+    ["케이블 로프 푸시다운","손목 중립, 그립 힘 최소."]]}],
+  tips:["그립을 덜 꽉 쥐기","손목은 일자 유지"],
+  prehab:["리스트 익스텐션 편심 (내리기 3초) 가볍게 3×15"],
+  red:["물건 들기도 힘들 정도의 통증","붓기·열감","손가락 저림"]},
+ {id:"elbow-in",name:"팔꿈치 안쪽",
+  cause:"일자 바 컬처럼 손목을 바깥으로 강제로 돌리는 동작에서 손목 굴곡근이 과사용돼요 (골퍼스 엘보).",
+  avoid:["일자 바 바벨 컬","무거운 리스트 컬"],
+  swaps:[
+   {from:"바벨 컬",to:[
+    ["해머컬 / 케이블 로프 해머컬","손바닥이 마주봐서 안쪽 부담이 가장 적어요."],
+    ["EZ바 컬","손목이 반쯤 돌아간 각도라 편해요."]]},
+   {from:"인클라인 덤벨 컬",to:[
+    ["머신 프리처 컬 (가볍게)","스트레치 부담이 작아요."]]}],
+  tips:["무게 내리고 템포 늘리기 (내리기 3초)"],
+  prehab:["리스트 컬 편심 가볍게 3×15"],
+  red:["약지·새끼손가락 저림","안쪽 붓기·멍"]},
+ {id:"elbow-back",name:"팔꿈치 뒤쪽",
+  cause:"머리 뒤로 깊게 내리는 삼두 운동은 팔꿈치 뒤 삼두건에 스트레스가 커요.",
+  avoid:["스컬크러셔","오버헤드 익스텐션","딥스"],
+  swaps:[
+   {from:"스컬크러셔 · 오버헤드 익스텐션",to:[
+    ["케이블 푸시다운 (로프·V바)","팔꿈치가 깊게 굽혀지지 않아요. 1순위."],
+    ["원암 케이블 푸시다운","좌우 각도를 편하게 맞춰요."]]},
+   {from:"딥스 · 클로즈그립 벤치",to:[
+    ["시티드 딥 머신","궤도 고정, 범위 조절이 쉬워요."]]}],
+  tips:["락아웃에서 강하게 튕기지 않기","워밍업 세트 2개 이상"],
+  prehab:["가벼운 푸시다운 고반복 2×20"],
+  red:["팔꿈치 뒤 붓기 (점액낭염)","뚝 소리 후 팔을 못 펴는 경우 → 즉시 진료"]},
+ {id:"shoulder",name:"어깨 앞쪽",
+  cause:"팔을 몸 뒤로 보내는 이두·삼두 운동은 어깨 앞쪽 이두건을 늘려요.",
+  avoid:["인클라인 덤벨 컬","딥스","드래그 컬 무겁게"],
+  swaps:[
+   {from:"인클라인 덤벨 컬",to:[
+    ["프리처 컬","팔이 몸 앞에 있어서 이두건이 덜 늘어나요."],
+    ["케이블 컬 (케이블 앞에 서서)","팔을 몸 약간 앞에 두고."]]},
+   {from:"딥스",to:[
+    ["케이블 푸시다운","어깨 과신전 없이 삼두만."]]}],
+  tips:["팔꿈치를 몸통 약간 앞에 고정","어깨 들썩이지 않기"],
+  prehab:["밴드 외회전 2×15","페이스풀 2×15"],
+  red:["팔뚝에 ‘뽀빠이’처럼 혹이 생김 (이두건 파열)","밤에 어깨 앞쪽 통증으로 깸"]},
+ {id:"wrist",name:"손목",
+  cause:"일자 바로 컬이나 스컬크러셔를 하면 손목이 고정된 채 비틀리거나 뒤로 꺾여요.",
+  avoid:["일자 바 바벨 컬","EZ바 스컬크러셔","리스트 컬"],
+  swaps:[
+   {from:"바벨 컬",to:[
+    ["덤벨 컬","손목이 자연스럽게 돌아가는 각도를 스스로 찾아요."],
+    ["케이블 로프 해머컬","손목 중립, 꺾임 없음."]]},
+   {from:"스컬크러셔",to:[
+    ["케이블 로프 푸시다운","손목을 일자로 두고 팔꿈치만 펴요."],
+    ["시티드 딥 머신","손잡이가 뉴트럴이라 손목이 편해요."]]}],
+  tips:["손목이 뒤로 꺾이지 않게 주먹을 세워요","손목 랩으로 지지"],
+  prehab:["고무공 쥐기 2×20","가벼운 손목 굴곡·신전 2×15"],
+  red:["넘어진 뒤 엄지 쪽 손목 오목한 곳이 아픔 (주상골 골절 의심 → X-ray)","밤에 엄지~약지가 저려서 깸 (손목터널)"]}
+],
+core:[
+ {id:"lowback",name:"허리",
+  cause:"싯업과 레그레이즈는 엉덩이 굽힘근(장요근)이 허리뼈를 앞으로 끌어당겨서 복근보다 허리가 먼저 아파요.",
+  avoid:["싯업","허리 뜨는 레그레이즈","무거운 러시안 트위스트","깊은 롤아웃"],
+  swaps:[
+   {from:"싯업",to:[
+    ["케이블 크런치 (무릎 꿇고)","골반은 고정하고 척추만 둥글게 말아요. 복직근 1순위."],
+    ["데드버그","허리를 바닥에 붙인 채 버티는 코어 운동."]]},
+   {from:"레그레이즈",to:[
+    ["리버스 크런치","무릎을 굽히고 골반만 살짝 들어 올려요. 허리 꺾임이 없어요."]]},
+   {from:"러시안 트위스트",to:[
+    ["팔로프 프레스","케이블이 몸통을 비틀려는 힘을 버텨요. 척추 회전 없이 복사근."]]}],
+  tips:["허리가 바닥이나 패드에서 뜨면 그 범위는 버려요","숨 내쉬면서 갈비뼈를 골반 쪽으로"],
+  prehab:["맥길 컬업 3×8초","사이드 플랭크 3×20초","버드독 2×8"],
+  red:RED_BACK},
+ {id:"neck",name:"목",
+  cause:"머리 뒤로 깍지 끼고 크런치하면 복근 대신 손으로 목을 당기게 돼요.",
+  avoid:["깍지 끼고 하는 크런치","싯업"],
+  swaps:[
+   {from:"바닥 크런치",to:[
+    ["케이블 크런치","로프를 머리 옆에 고정하면 목은 그대로, 몸통만 말려요."],
+    ["머신 크런치","패드가 상체를 끌어줘서 목에 힘이 안 들어가요."]]},
+   {from:"싯업",to:[
+    ["리버스 크런치","머리를 바닥에 둔 채 아래쪽에서 말아요."],
+    ["플랭크","목 중립 자세로 버티기."]]}],
+  tips:["턱과 가슴 사이에 주먹 하나","시선은 천장이 아닌 무릎 쪽"],
+  prehab:["친 턱 2×10"],
+  red:["팔이나 손가락으로 뻗치는 저림","어지럼·심한 두통"]},
+ {id:"tail",name:"꼬리뼈",
+  cause:"딱딱한 바닥에서 싯업이나 V업을 하면 꼬리뼈가 체중에 눌려요.",
+  avoid:["바닥 싯업","V업","바닥 러시안 트위스트"],
+  swaps:[
+   {from:"바닥 크런치 · V업",to:[
+    ["케이블 크런치 (무릎 꿇고)","꼬리뼈가 바닥에 닿지 않아요."],
+    ["머신 크런치 (쿠션 깔고)","시트에 수건을 접어 깔아요."]]},
+   {from:"바닥 레그레이즈",to:[
+    ["캡틴스 체어 니레이즈","등을 패드에 기대고 매달려서 해요. 엉덩이가 바닥에 안 닿아요."]]}],
+  tips:["두꺼운 매트 사용","앉는 머신은 도넛 방석"],
+  prehab:["글루트 브릿지 2×15"],
+  red:["엉덩방아 후 앉기 힘든 통증 (골절 의심)","꼬리뼈 위쪽이 붓고 뜨겁거나 진물"]},
+ {id:"hip",name:"고관절 앞쪽",
+  cause:"다리를 뻗은 채 드는 레그레이즈는 고관절 앞쪽 굽힘근을 강하게 써서 찝히거나 딸깍거려요.",
+  avoid:["스트레이트 레그레이즈","행잉 레그레이즈","싯업"],
+  swaps:[
+   {from:"레그레이즈",to:[
+    ["리버스 크런치 (작은 범위)","무릎을 가슴 쪽으로 조금만, 골반을 말아 올리는 데 집중."],
+    ["데드버그","다리를 굽힌 채 천천히 내려요."]]},
+   {from:"행잉 레그레이즈",to:[
+    ["케이블 크런치","고관절을 거의 안 굽히고 복근만."]]}],
+  tips:["다리를 쭉 뻗는 동작은 잠시 빼요","딸깍 소리 나는 범위 전에서 멈추기"],
+  prehab:["90/90 고관절 스트레칭 2×30초"],
+  red:["사타구니 깊은 곳 통증으로 걸을 때 절뚝임","딸깍 소리와 잠기는 느낌"]}
+]};
+DATA.legs.push(
+ {id:"ham",name:"햄스트링",
+  cause:"허벅지 뒤가 늘어난 상태에서 무겁게 버티거나 빠르게 움직일 때 당기거나 미세하게 찢어져요.",
+  avoid:["루마니안 데드리프트","스티프 데드리프트","굿모닝","스프린트·점프"],
+  swaps:[
+   {from:"루마니안 데드리프트",to:[
+    ["머신 힙 쓰러스트","햄스트링을 늘리지 않고 둔근 위주로 엉덩이를 펴요. 1순위."],
+    ["글루트 브릿지 버티기 30초","통증 없이 힘을 주는 연습부터."]]},
+   {from:"레그컬 (무겁게)",to:[
+    ["라잉 레그컬 가볍게 (통증 없는 범위)","15~20회 가능한 무게. 내리는 속도는 천천히."]]},
+   {from:"깊은 스쿼트 · 런지",to:[
+    ["레그프레스 (발 낮게)","허벅지 앞 위주로, 뒤쪽은 덜 늘어나요."],
+    ["레그익스텐션","햄스트링을 전혀 안 써요."]]}],
+  tips:["다친 직후 억지로 스트레칭하지 않기","통증 없이 걷게 되면 무게를 조금씩 올려요"],
+  prehab:["글루트 브릿지 버티기 3×30초","노르딕 컬 (회복 후 예방용) 2×5"],
+  red:["‘뚝’ 소리와 함께 주저앉고 허벅지 뒤 멍이 넓게 퍼짐 (파열 의심)","제대로 걷지 못함","엉덩이에서 다리로 뻗치는 저림 (좌골신경)"]},
+ {id:"tail",name:"꼬리뼈",
+  cause:"레그프레스나 스쿼트 바닥에서 골반이 말리면 꼬리뼈가 패드에 눌려요. 딱딱한 시트에 오래 앉는 것도 원인이에요.",
+  avoid:["깊은 레그프레스","시티드 레그컬 장시간","바닥 싯업"],
+  swaps:[
+   {from:"레그프레스",to:[
+    ["벨트 스쿼트","서서 해서 꼬리뼈가 아무 데도 안 닿아요. 1순위."],
+    ["스미스 스플릿 스쿼트","앉지 않고 하체 전체를 써요."]]},
+   {from:"시티드 레그컬",to:[
+    ["라잉 레그컬","엎드려서 해서 꼬리뼈 압박이 없어요."]]},
+   {from:"시티드 카프레이즈",to:[
+    ["스미스 스탠딩 카프레이즈","서서 하면 앉을 필요가 없어요."]]}],
+  tips:["앉는 머신은 도넛 방석이나 접은 수건","레그프레스는 엉덩이가 말리기 전까지만"],
+  prehab:["글루트 브릿지 2×15"],
+  red:["엉덩방아 후 앉기 힘든 통증 (골절 의심)","꼬리뼈 위쪽이 붓고 뜨겁거나 진물"]}
+);
+
+const VERDICT=[
+ {max:3,cls:"v-ok",pill:"진행",txt:"운동해도 돼요. 아래 대체 운동으로 하고, 내일 아침 통증이 평소보다 심하지 않으면 괜찮은 거예요."},
+ {max:6,cls:"v-warn",pill:"조정",txt:"무게를 30~50% 낮추고 대체 운동만 하세요. 세트 중에 통증이 올라가면 그 종목은 바로 빼요."},
+ {max:10,cls:"v-stop",pill:"중단",txt:"오늘은 이 부위 운동을 쉬세요. 아프지 않은 부위로 바꾸고, 2~3일 지나도 그대로면 진료를 받으세요."}
+];
+
+
+const V3=[
+ {max:3,cls:"v-ok",pill:"진행",txt:"대체 운동으로 하고, 내일 아침 통증만 체크"},
+ {max:6,cls:"v-warn",pill:"조정",txt:"무게 30~50% 낮추고, 아프면 그 종목 바로 빼기"},
+ {max:10,cls:"v-stop",pill:"중단",txt:"오늘은 이 부위 쉬기. 2~3일 지속되면 진료"}
+];
+const $=s=>document.querySelector(s);
+let state={step:1,part:null,pain:null,nrs:3,tab:"swap",sw:0};
+function yt(name){return "https://www.youtube.com/results?search_query="+encodeURIComponent(name.replace(/\s*\(.*?\)\s*/g," ").trim()+" 자세")}
+const vOf=n=>V3.find(v=>n<=v.max);
+
+function renderS1(){
+ $("#tiles").innerHTML=PARTS.map(p=>`<button class="tile" data-id="${p.id}"><b>${p.name}</b><span>${p.sub}</span><em>통증 ${DATA[p.id].length}가지</em></button>`).join("");
+}
+function renderS2(){
+ const part=PARTS.find(p=>p.id===state.part);
+ $("#s2t").textContent=`${part.name} 운동, 어디가 아파요?`;
+ $("#rows").innerHTML=DATA[state.part].map(p=>`<button class="row" data-id="${p.id}"><i></i><b>${p.name} 통증</b><span>주로 ${p.avoid[0]} 할 때</span><span class="chev">›</span></button>`).join("");
+}
+function panelSwap(d){
+ const sw=d.swaps[state.sw];
+ return `<div><p class="lbl">오늘은 빼기</p><div class="avoid">${d.avoid.map(a=>`<span>${a}</span>`).join("")}</div></div>
+ <div><p class="lbl">원래 하려던 운동</p><div class="froms">${d.swaps.map((s,i)=>`<button class="from" data-i="${i}" aria-pressed="${i===state.sw}">${s.from}</button>`).join("")}</div></div>
+ <div class="alts ${state.nrs>=7?"dim":""}" id="alts">${sw.to.map((t,i)=>`<div class="alt"><strong>${t[0]}${i===0?'<span class="best">추천</span>':""}</strong>${templateFor(t[0],state.part)?`<button class="play" data-i="${i}">동작</button>`:"<span></span>"}<p>${t[1]}</p></div>`).join("")}</div>`;
+}
+function panelWhy(d){
+ return `<div class="cause"><b>왜 아플까</b><br>${d.cause}</div>
+ <div class="card"><p class="lbl">자세 팁</p><ul class="plain">${d.tips.map(t=>`<li>${t}</li>`).join("")}</ul></div>
+ <div class="card"><p class="lbl">통증 줄면 보강 운동</p><ul class="plain">${d.prehab.map(t=>`<li>${t}</li>`).join("")}</ul></div>`;
+}
+function panelDoc(d){
+ return `<div class="red"><p class="lbl">이런 증상이면 운동 말고 병원</p><ul class="plain">${d.red.map(t=>`<li>${t}</li>`).join("")}</ul></div>
+ <div class="card" style="display:flex;flex-direction:column;gap:10px"><p class="lbl" style="margin:0">근처 정형외과 · 재활의학과</p>
+  <div class="maps"><a href="https://map.naver.com/p/search/${encodeURIComponent("정형외과")}" target="_blank" rel="noopener">네이버 지도</a><a class="alt2" href="https://map.kakao.com/?q=${encodeURIComponent("정형외과")}" target="_blank" rel="noopener">카카오맵</a></div>
+  <div class="partner"><b>제휴 병원 자리</b> · 시제품 예시 영역이에요. 통증 부위별 제휴 병원이 노출되고 예약 연결 시 수수료가 생기는 구조예요.</div></div>
+ <p class="note">의학적 진단을 대신하지 않아요. 통증이 2주 넘게 이어지면 진료를 먼저 받으세요.</p>`;
+}
+function renderS3(){
+ const part=PARTS.find(p=>p.id===state.part),d=DATA[state.part].find(p=>p.id===state.pain),v=vOf(state.nrs);
+ const tabs=[["swap","대체 운동"],["why","원인·팁"],["doc","병원"]];
+ $("#s3").innerHTML=`
+ <div class="r-title"><div class="kicker">STEP 3</div><h2>${part.name} 날 · ${d.name} 통증</h2></div>
+ <div class="pain"><div class="pain-top"><label for="nrs">지금 통증 점수</label><span class="nrs" id="nrsv">${state.nrs}<small> / 10</small></span></div>
+  <input type="range" id="nrs" min="0" max="10" step="1" value="${state.nrs}">
+  <div class="verdict ${v.cls}" id="verdict"><span class="pill">${v.pill}</span><span>${v.txt}</span></div></div>
+ <div class="tabs" role="tablist">${tabs.map(([k,n])=>`<button class="tab" role="tab" data-t="${k}" aria-selected="${state.tab===k}">${n}</button>`).join("")}</div>
+ <div class="panel" id="panel">${state.tab==="swap"?panelSwap(d):state.tab==="why"?panelWhy(d):panelDoc(d)}</div>`;
+}
+function go(step,push=true){
+ if(step>=2&&!state.part)step=1;if(step===3&&!state.pain)step=2;
+ state.step=step;
+ if(step===2)renderS2();if(step===3)renderS3();
+ [1,2,3].forEach(n=>{const el=$("#s"+n);el.classList.toggle("on",n===step);el.classList.toggle("past",n<step);if(n===step)el.scrollTop=0});
+ document.querySelectorAll(".steps i").forEach((el,i)=>el.classList.toggle("on",i<step));
+ $("#back").disabled=step===1;
+ if(push){try{history.pushState({step},"",step===1?location.pathname:"#"+(step===2?state.part:state.part+"--"+state.pain))}catch(e){}}
+}
+window.addEventListener("popstate",e=>{const sh=document.getElementById("sheet");if(sh&&!sh.hidden){sh.hidden=true;cancelAnimationFrame(anim.raf)}const s=(e.state&&e.state.step)||1;go(s,false)});
+$("#back").addEventListener("click",()=>{if(history.state&&history.state.step>1){try{history.back();return}catch(e){}}go(state.step-1,false)});
+$("#tiles").addEventListener("click",e=>{const b=e.target.closest(".tile");if(!b)return;state.part=b.dataset.id;go(2)});
+$("#rows").addEventListener("click",e=>{const b=e.target.closest(".row");if(!b)return;state.pain=b.dataset.id;state.tab="swap";state.sw=0;go(3)});
+$("#s3").addEventListener("click",e=>{
+ const t=e.target.closest(".tab");if(t){state.tab=t.dataset.t;renderS3();return}
+ const f=e.target.closest(".from");if(f){state.sw=+f.dataset.i;renderS3();return}
+ const p=e.target.closest(".play");if(p)openSheet(state.sw,+p.dataset.i);
+});
+$("#s3").addEventListener("input",e=>{
+ if(e.target.id!=="nrs")return;state.nrs=+e.target.value;const v=vOf(state.nrs);
+ $("#nrsv").innerHTML=`${state.nrs}<small> / 10</small>`;
+ const el=$("#verdict");el.className="verdict "+v.cls;el.innerHTML=`<span class="pill">${v.pill}</span><span>${v.txt}</span>`;
+ const a=$("#alts");if(a)a.classList.toggle("dim",state.nrs>=7);
+});
+renderS1();
+try{const h=location.hash.slice(1).split("--");if(DATA[h[0]]){state.part=h[0];if(DATA[h[0]].some(p=>p.id===h[1])){state.pain=h[1];go(3,false)}else go(2,false)}}catch(e){}
+
+const sheet=$("#sheet"),cv=$("#cv"),cx=cv.getContext("2d");cx.setTransform(2,0,0,2,0,0);
+let anim={key:null,pain:null,raf:0,t0:0,paused:false,pt:0,last:null};
+function frame(ts){const time=anim.paused?anim.pt:(ts-anim.t0)/1000;anim.pt=time;render(cx,anim.key,anim.pain,time);anim.raf=requestAnimationFrame(frame)}
+function openSheet(si,i){
+ const d=DATA[state.part].find(p=>p.id===state.pain),sw=d.swaps[si],t=sw.to[i];
+ const key=templateFor(t[0],state.part);if(!key)return;
+ anim.key=key;anim.pain=PAIN_AT[d.id]||null;anim.paused=false;anim.t0=performance.now();
+ $("#sh-from").textContent=sw.from+" 대신";$("#sh-name").textContent=t[0];$("#sh-desc").textContent=t[1];
+ $("#sh-mus").textContent=(T[key].mus||[]).map(m=>MUS_KO[m]).join(" · ");
+ $("#sh-pain").textContent=d.name;$("#sh-yt").href=yt(t[0]);$("#pp").textContent="탭해서 멈춤";
+ anim.last=document.activeElement;sheet.hidden=false;cancelAnimationFrame(anim.raf);anim.raf=requestAnimationFrame(frame);$("#sh-close").focus();
+}
+function closeSheet(){sheet.hidden=true;cancelAnimationFrame(anim.raf);if(anim.last)anim.last.focus()}
+$("#sh-close").addEventListener("click",closeSheet);
+sheet.addEventListener("click",e=>{if(e.target===sheet)closeSheet()});
+document.addEventListener("keydown",e=>{if(e.key==="Escape"&&!sheet.hidden)closeSheet()});
+$("#stage").addEventListener("click",()=>{if(anim.paused){anim.paused=false;anim.t0=performance.now()-anim.pt*1000;$("#pp").textContent="탭해서 멈춤"}else{anim.paused=true;$("#pp").textContent="탭해서 재생"}});
+</script>
+<script>if("serviceWorker" in navigator){addEventListener("load",()=>navigator.serviceWorker.register("/sw.js").catch(()=>{}))}</script>
+</body>
+</html>
